@@ -7,7 +7,9 @@ public class ASA implements Parser{
     private int i = 0;
     private boolean hayErrores = false;
     private final List<Token> tokens;
-    //esta es toda la tabla s es el shift y r reduccion por whats ahi les mando los estados y todo eso
+    //esta es toda la tabla s es el shift y r 
+    //puse la tabla de reducciones pa saber cuantos elementos quitar y con que produccion se reduce
+    //o sea r 12 es la reduccion 12 de la tabla y el primer elemento es mediante que reduccion hace y el segundo elemento es la cantidad de elementos de esa reduccion
     String [][] TablaAccionGoto  =                                                                                      //
     { {"Estado",      "select",     "from",      "distinct",      "*",       ",",        "id",        ".",      "$",         "Q",     "D",     "P",     "A",      "A1",      "A2",      "A3",     "T",       "T1",      "T2",     "T3",    },
       {     "0",        "s 1",      "",             "",           "",        "",          "",         "",       "",          "24",    "",      "",      "",       "",        "",        "",       "",        "",        "",       "",      },             
@@ -37,6 +39,26 @@ public class ASA implements Parser{
       {     "24",        "",        "",             "",           "",        "",          "",         "",       "acc",       "",      "",      "",      "",       "",        "",        "",       "",        "",        "",       "",      },
       {     "25",        "",        "",             "",           "",        "",          "",         "",       "r 12",      "",      "",      "",      "",       "",        "",        "",       "",        "",        "",       "",      }
     };
+    String [][] Reducciones = 
+    { { "Q","4"  },
+      { "D","2"  },
+      { "D","1"  },
+      { "P","1"  },
+      { "P","1"  },
+      { "A","2"  },
+      { "A1","2" },
+      { "A1","1" },
+      { "A2","2" },
+      { "A3","2" },
+      { "A3","1" },
+      { "T","2"  },
+      { "T1","2" },
+      { "T1","1" },
+      { "T2","2" },
+      { "T3","1" },
+      { "T3","1" }
+    };   
+
 
     public ASA(List<Token> tokens){
         this.tokens = tokens;
@@ -44,8 +66,64 @@ public class ASA implements Parser{
 
     @Override
     public boolean parse() {
-    
-        
+
+        String entrada = "";
+        Stack <String> pila = new Stack <String>();
+
+        if(tokens.get(i).tipo == TipoToken.IDENTIFICADOR ){
+          entrada = "id";
+        }
+        else{
+          entrada = tokens.get(i).lexema;
+        }
+        i++;
+
+        pila.push("0");
+        while(true){
+            String[] accion = TablaAccionGoto[buscaEstado(TablaAccionGoto, pila.peek() )][buscaColumna(TablaAccionGoto, entrada )].split(" ");
+            if ( accion[0].equals("s") ){
+              pila.push(accion[1]);
+              if(tokens.get(i).tipo == TipoToken.IDENTIFICADOR ){
+                entrada = "id";
+              }
+              else{
+                entrada = tokens.get(i).lexema;
+              }
+              i++;
+            }
+            else if(  accion[0].equals("r") ){
+            	for(int x=0;x<Integer.parseInt(Reducciones[Integer.parseInt(accion[1])][1]);x++){
+                pila.pop();
+            	}
+              String goTo = TablaAccionGoto[buscaEstado(TablaAccionGoto, pila.peek() )][buscaColumna(TablaAccionGoto, Reducciones[Integer.parseInt(accion[1])][0] )];
+              pila.push(goTo);
+            }
+            else if( accion[0].equals("acc") ){
+                System.out.println("Consulta correcta");
+                return  true;
+            }else{
+                System.out.println("Consulta incorrecta");
+                return false;
+            }
+        }
+    }
+
+    private int buscaEstado(String tablaAccionGoto [][], String estado){
+        int l = tablaAccionGoto.length;
+        for(int i=1;i<l;i++){
+            if(tablaAccionGoto[i][0].equals(estado) )
+                return i;
+        }
+        return -10;
+    }
+
+    private int buscaColumna(String tablaAccionGoto [][], String columna){
+        int l = tablaAccionGoto[0].length;
+        for(int i=1;i<l;i++){
+            if(tablaAccionGoto[0][i].equals(columna) )
+                return i;
+        }
+        return -1;
     }
 }
 
