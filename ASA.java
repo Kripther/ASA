@@ -47,16 +47,16 @@ public class ASA implements Parser{
       { "P","1"  },
       { "A","2"  },
       { "A1","2" },
-      { "A1","1" },
+      { "A1","0" },// tenia mal la cantidad de reducciones con el epsilon en vez de 1 era 0
       { "A2","2" },
       { "A3","2" },
-      { "A3","1" },
+      { "A3","0" },//
       { "T","2"  },
       { "T1","2" },
-      { "T1","1" },
+      { "T1","0" },//
       { "T2","2" },
       { "T3","1" },
-      { "T3","1" }
+      { "T3","0" }//
     };   
 
 
@@ -70,33 +70,20 @@ public class ASA implements Parser{
         String entrada = "";
         Stack <String> pila = new Stack <String>();
 
-        if(tokens.get(i).tipo == TipoToken.IDENTIFICADOR ){
-          entrada = "id";
-        }
-        else{
-          entrada = tokens.get(i).lexema;
-        }
-        i++;
-
+        entrada = avanzarEntrada();
         pila.push("0");
         while(true){
             String[] accion = TablaAccionGoto[buscaEstado(TablaAccionGoto, pila.peek() )][buscaColumna(TablaAccionGoto, entrada )].split(" ");
             if ( accion[0].equals("s") ){
-              pila.push(accion[1]);
-              if(tokens.get(i).tipo == TipoToken.IDENTIFICADOR ){
-                entrada = "id";
-              }
-              else{
-                entrada = tokens.get(i).lexema;
-              }
-              i++;
+            	pila.push(accion[1]);
+                entrada = avanzarEntrada();
             }
             else if(  accion[0].equals("r") ){
             	for(int x=0;x<Integer.parseInt(Reducciones[Integer.parseInt(accion[1])][1]);x++){
-                pila.pop();
+                	pila.pop();
             	}
-              String goTo = TablaAccionGoto[buscaEstado(TablaAccionGoto, pila.peek() )][buscaColumna(TablaAccionGoto, Reducciones[Integer.parseInt(accion[1])][0] )];
-              pila.push(goTo);
+                String goTo = TablaAccionGoto[buscaEstado(TablaAccionGoto, pila.peek() )][buscaColumna(TablaAccionGoto, Reducciones[Integer.parseInt(accion[1])][0] )];
+                pila.push(goTo);
             }
             else if( accion[0].equals("acc") ){
                 System.out.println("Consulta correcta");
@@ -106,6 +93,16 @@ public class ASA implements Parser{
                 return false;
             }
         }
+    }
+
+    private String avanzarEntrada(){
+    	String entradaBuffer;
+        if(tokens.get(i).tipo == TipoToken.IDENTIFICADOR )
+            entradaBuffer = "id";
+        else 
+            entradaBuffer = tokens.get(i).lexema;
+       	i++;
+       	return entradaBuffer;
     }
 
     private int buscaEstado(String tablaAccionGoto [][], String estado){
